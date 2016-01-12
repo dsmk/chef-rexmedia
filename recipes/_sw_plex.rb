@@ -1,46 +1,66 @@
-include_recipe 'yum-epel'
+#include_recipe 'yum-epel'
 
-%w{
- perl-CGI-Session 
-}.each do |pkg| 
-  package pkg
-end
+plex_version = node['rexden']['plex_version']
+plex_pkg = "plexmediaserver-#{plex_version}.x86_64.rpm"
+plex_url = "http://downloads.plex.tv/plex-media-server/#{plex_version}/#{plex_pkg}"
 
-logitech_version = node['rexden']['logitech_version']
-logitech_url = "http://downloads.slimdevices.com/LogitechMediaServer_v#{logitech_version}/logitechmediaserver-#{logitech_version}-1.noarch.rpm"
-
-remote_file "/root/logitechmediaserver-#{logitech_version}-1.noarch.rpm" do
-  source logitech_url
+remote_file "/root/#{plex_pkg}" do
+  source plex_url
   owner 'root'
   group 'root'
   action :create
 end
 
-rpm_package 'logitechmediaserver' do
-  source "/root//logitechmediaserver-#{logitech_version}-1.noarch.rpm"
+rpm_package 'plexmediaserver' do
+  source "/root/#{plex_pkg}"
   action :install
 end
 
-link '/usr/share/perl5/vendor_perl/Slim' do
-  to '/usr/lib/perl5/vendor_perl/Slim'
-end
-
-service 'squeezeboxserver' do
+service 'plexmediaserver' do
   action [ :enable, :start ]
 end
 
-execute 'logitech-firewalld-install' do
-    action :nothing
-    command "/usr/bin/firewall-cmd --reload ; /usr/bin/firewall-cmd --add-service=logitech --permanent ; /usr/bin/firewall-cmd --reload"
+[ 'Library', 
+  'Library/Application Support',
+  'Library/Application Support/Plex Media Server'
+].each do |dir|
+  directory "/var/lib/plexmediaserver/#{dir}" do
+    user "plex"
+    group "plex"
+    mode "0755"
+  end
 end
 
-cookbook_file '/etc/firewalld/services/logitech.xml' do
+if false
+  template "/var/lib/plexmediaserver/Library/Application Support/Plex Media Server/Preferences.xml" do
+    source "plex/Preferences.xml.erb"
+    user "plex"
+    group "plex"
+    mode "0600"
+    notifies :restart, 'service[plexmediaserver]', :imediately
+  end
+end
+
+template "/etc/sysconfig/PlexMediaServer" do
+  source "plex/PlexMediaServer.erb"
+  user "plex"
+  group "plex"
+  mode "0600"
+  notifies :restart, 'service[plexmediaserver]', :immediately
+end
+
+execute 'plex-firewalld-install' do
+    action :nothing
+    command "/usr/bin/firewall-cmd --reload ; /usr/bin/firewall-cmd --add-service=plex --permanent ; /usr/bin/firewall-cmd --reload"
+end
+
+cookbook_file '/etc/firewalld/services/plex.xml' do
     source 'firewall-plex.xml'
     user 'root'
     group 'root'
     mode '0444'
     only_if "/usr/bin/systemctl status firewalld"
-    notifies :run, 'execute[logitech-firewalld-install]', :immediately
+    notifies :run, 'execute[plex-firewalld-install]', :immediately
 end
 
 # vi: expandtab ts=2 
