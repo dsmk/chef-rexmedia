@@ -16,7 +16,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-default['rexden']['vagrant_version'] = '1.8.1'
-default['rexden']['virtualbox_version'] = "5.0.12"
-default['rexden']['virtualbox_rel'] = "5.0.12_104815"
+default['rexden']['plex_version'] = '0.9.12.3.1173-937aac3'
 
