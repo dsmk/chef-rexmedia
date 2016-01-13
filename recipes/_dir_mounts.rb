@@ -1,4 +1,4 @@
-include_recipe 'rexcore::_nfs_client'
+include_recipe 'rexcore::nfs_client'
 
 mroot = node['rexden']['media_root']
 mnfs = node['rexden']['media_nfs_prefix']
