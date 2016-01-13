@@ -16,5 +16,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-default['rexden']['plex_version'] = '0.9.12.3.1173-937aac3'
+default['rexden']['plex_version'] = '0.9.14.6.1620-e0b7243'
 
